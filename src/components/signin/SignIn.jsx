@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../services/authService";
 
 function SignIn() {
   const [formData, setFormData] = useState({
@@ -8,13 +10,15 @@ function SignIn() {
 
   const [passwordError, setPasswordError] = useState("");
   const [apiError, setApiError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // Validate password whenever it changes
     if (name === "password") {
       validatePassword(value);
     }
@@ -39,7 +43,6 @@ function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if password error exists before submitting the form
     if (passwordError) {
       alert("Please fix the password requirements.");
       return;
@@ -47,28 +50,28 @@ function SignIn() {
 
     setIsSubmitting(true);
     setApiError("");
+    setSuccessMessage(""); 
 
     try {
-      const response = await fetch("https://your-backend-api.com/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const data = await loginUser(formData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setApiError(errorData.message || "Invalid credentials.");
-        setIsSubmitting(false);
-        return;
+      // Save the auth token in localStorage
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      } else{
+        console.log("No token received from the server.")
       }
 
-      const data = await response.json();
-      alert(`Welcome back, ${data.fullName || "user"}!`);
-      setFormData({ email: "", password: "" }); // Reset form
+      // Set the success message
+      setSuccessMessage(`Welcome back, ${data.fullName || "user"}!`);
+      setFormData({ email: "", password: "" });
+
+      // Redirect user to another page (e.g., dashboard or home) after login
+      setTimeout(() => {
+        navigate("/");
+      }, 3000); // Navigate after 3 seconds
     } catch (error) {
-      setApiError("Failed to connect to the server. Please try again later.");
+      setApiError(error.message || "Failed to connect to the server. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
@@ -86,6 +89,7 @@ function SignIn() {
     <div className="container">
       <div className="form-container">
         <h2>Login to Your Account</h2>
+        {successMessage && <p className="success-text">{successMessage}</p>} {/* Success Message */}
         <form onSubmit={handleSubmit}>
           <div className="email">
             <label htmlFor="">Enter Email Address</label>

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import "./SignUp.css";
 import { Icons } from "../CloudImages/CloudImages";
 import { Image, Transformation } from "cloudinary-react";
+import { signupUser } from "../../services/authService";
+
 function SignUp() {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -11,13 +13,16 @@ function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [apiError, setApiError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value }); // Validate password whenever it changes
+    setFormData({ ...formData, [name]: value }); 
     if (name === "password") {
       validatePassword(value);
     }
   };
+
   const validatePassword = (password) => {
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -32,8 +37,9 @@ function SignUp() {
       setPasswordError("");
     }
   };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Check if password error exists before submitting the form
+    e.preventDefault();
     if (passwordError) {
       alert("Please fix the password requirements.");
       return;
@@ -41,38 +47,36 @@ function SignUp() {
     setIsSubmitting(true);
     setApiError("");
     try {
-      const response = await fetch("https://your-backend-api.com/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        setApiError(errorData.message || "Something went wrong!");
-        setIsSubmitting(false);
-        return;
-      }
-      const data = await response.json();
-      alert("Signup successful! Welcome, " + data.fullName);
-      setFormData({ fullName: "", email: "", password: "" }); // Reset the form
+      // Use the signupUser function from authService.jsx
+      const data = await signupUser(formData); 
+      setSuccessMessage(data.message, data.fullName); 
+      setFormData({ fullName: "", email: "", password: "" }); // Reset 
+      
+      // Clear success message after timeout
+      setTimeout(() => {
+        setSuccessMessage(""); 
+      }, 5000);
     } catch (error) {
-      setApiError("Failed to connect to the server. Please try again later.");
+      console.error("Signup Error:", error);
+      setApiError(error.message || "Something went wrong!");
     } finally {
       setIsSubmitting(false);
     }
   };
+
   const handleGoogleSignup = () => {
     console.log("Sign up with Google");
   };
+
   const handleAppleSignup = () => {
     console.log("Sign up with Apple");
   };
+
   return (
     <div className="container">
       <div className="form-container">
         <h2>Create Account</h2>
+        {successMessage && <p className="success-text">{successMessage}</p>} {/* Display success message */}
         <form onSubmit={handleSubmit}>
           <label htmlFor="fullName">Enter Full Name</label>
           <input
@@ -106,8 +110,8 @@ function SignUp() {
             className="input"
             required
           />
-          {passwordError && <p className="error-text">{passwordError}</p>}
-          {apiError && <p className="error-text">{apiError}</p>}
+          {passwordError && <p className="error-text">{passwordError || "Unknown error"}</p>}
+          {apiError && <p className="error-text">{apiError || "Unknown error"}</p>}
           <button
             type="submit"
             className="signup-button"
@@ -146,4 +150,5 @@ function SignUp() {
     </div>
   );
 }
+
 export default SignUp;
