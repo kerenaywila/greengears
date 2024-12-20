@@ -1,12 +1,13 @@
 import axios from 'axios';
+import API from './apiService';
 
 // Base URL for the backend
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.API_BASE_URl;
 
 // Function to handle user signup
 export const signupUser = async (userData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/signup/user`, userData);
+    const response = await API.post("/signup/user", userData);
     return response.data;
   } catch (error) {
     throw error.response?.data || 'Signup failed';
@@ -16,7 +17,7 @@ export const signupUser = async (userData) => {
 // Function to handle user login
 export const loginUser = async (userData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/login/user`, userData);
+    const response = await API.post("/login/user", userData);
     return response.data;
   } catch (error) {
     throw error.response?.data || 'Login failed';
@@ -26,7 +27,7 @@ export const loginUser = async (userData) => {
 // Function to verify OTP for user
 export const verifyOtp = async (otpData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/verify-otp/user`, otpData);
+    const response = await API.post("/verify-otp/user", otpData);
     return response.data;
   } catch (error) {
     throw error.response?.data || 'OTP verification failed';
